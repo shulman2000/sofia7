@@ -1,0 +1,29 @@
+# Public sofia7 repository: publish a draft release staged by private CI (AD-8 as amended).
+# Lives in the public sofia7 repository; kept here until that repository exists.
+# Receives no private data. Before enabling, pin every action to a full commit SHA.
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: "release ID of the staged draft, e.g. SOFIA7-2.0.0-beta.3-r1"
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    environment: release  # required reviewer: the release approver (D4)
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11.9"
+      - name: Verify, record authorization and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/publish_release.py --repo "${{ github.repository }}" --release-id "${{ inputs.release_id }}" --run-id "${{ github.run_id }}"
